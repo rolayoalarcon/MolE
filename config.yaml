@@ -1,0 +1,27 @@
+batch_size: 800                         # batch size
+warm_up: 3                             # warm-up epochs
+epochs: 1                             # total number of epochs
+
+load_model: None                        # resume training
+eval_every_n_epochs: 1                  # validation frequency
+save_every_n_epochs: 5                  # automatic model saving frequecy
+
+init_lr: 0.0005                         # initial learning rate for Adam
+weight_decay: 1e-5                      # weight decay for Adam
+gpu: cuda:0                             # training GPU 
+
+model_type: gin_concat                         # GNN backbone (i.e., gin/gcn)
+model: 
+  num_layer: 5                          # number of graph conv layers
+  emb_dim: 200                          # embedding dimension in graph conv layers
+  feat_dim: 8000                          # output feature dimention
+  drop_ratio: 0.0                         # dropout ratio
+  pool: add                            # readout pooling (i.e., mean/max/add)
+
+dataset:
+  num_workers: 100                       # dataloader number of workers
+  valid_size: 0.1                      # ratio of validation data
+  data_path: data/pubchem_data/pubchem_100k_random.txt # path of pre-training data
+
+loss:
+  l: 0.0001 # Lambda parameter

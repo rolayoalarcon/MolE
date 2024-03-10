@@ -1,0 +1,14 @@
+**/__pycache__/ 
+ckpt/**
+data/benchmark_data/**
+./experiments/**
+finetune/**
+logdir/**
+**/representation_dir/
+examine_finetune.ipynb
+umap_representation.Rmd
+
+data/pubchem_data/pubchem_1M_random.txt
+data/pubchem_data/pubchem-10m-clean.txt
+data/pubchem_data/pubchem_200k_random.txt
+data/pubchem_data/pubchem_500k_random.txt
