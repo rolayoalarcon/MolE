@@ -45,7 +45,7 @@ def determine_dirname(config_dict):
     else:
         representation_dimensionality = config_dict["model"]["emb_dim"]
     
-    base_model_str = "TEST_{model_type}_R{representation_dim}_E{embedding_dim}_lambda{lambdaval}_{datetime_str}"
+    base_model_str = "{model_type}_R{representation_dim}_E{embedding_dim}_lambda{lambdaval}_{datetime_str}"
 
     directory_name = base_model_str.format(model_type=config_dict["model_type"],
                                           representation_dim=representation_dimensionality ,
