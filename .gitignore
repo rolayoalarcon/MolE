@@ -1,5 +1,4 @@
 **/__pycache__/ 
-ckpt/**
 data/benchmark_data/**
 experiments/*.tsv.gz
 finetune/**
@@ -16,3 +15,9 @@ data/pubchem_data/pubchem_1M_random.txt
 data/pubchem_data/pubchem-10m-clean.txt
 data/pubchem_data/pubchem_200k_random.txt
 data/pubchem_data/pubchem_500k_random.txt
+
+# Keep an example of the pre-trained model
+ckpt/**
+!ckpt/gin_concat_R1000_E8000_lambda0.0001/
+!ckpt/gin_concat_R1000_E8000_lambda0.0001/checkpoints
+!ckpt/gin_concat_R1000_E8000_lambda0.0001/checkpoints/config.yaml
