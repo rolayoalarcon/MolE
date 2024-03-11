@@ -1,8 +1,8 @@
 batch_size: [32, 101, 512, 800]                  # batch size
-epochs: 1                     # total number of epochs
+epochs: 100                     # total number of epochs
 eval_every_n_epochs: 1          # validation frequency in ./ckpt
 log_every_n_steps: 50           # print training log frequency
-fine_tune_from: gin_concat_R1000_E8000  # sub directory of pre-trained model in ./ckpt
+fine_tune_from: gin_concat_R1000_E8000_lambda0.0001  # sub directory of pre-trained model in ./ckpt
 fp16_precision: False           # float precision 16 (i.e. True/False)
 init_lr: [0.0005, 0.001]                 # initial learning rate for the prediction head
 init_base_lr: [0.00005, 0.0001, 0.0002, 0.0005]            # initial learning rate for the base GNN encoder
@@ -29,5 +29,5 @@ dataset:
   splitting: scaffold           # data splitting (i.e., random/scaffold)
 
 random_search:
-  n_models: 1
-  n_trains: 1
+  n_models: 5
+  n_trains: 3
