@@ -30,7 +30,10 @@ To pre-train the MolE framework you can run `pretrain.py`
 python pretrain.py
 ```
 
-These hyperparameters for pre-training can be found and modified at `config.yaml`. There, you will also find a more detailed explanation of each parameter and how to modify it. Keep in mind that pre-training can take several hours.
+These hyperparameters for pre-training can be found and modified at `config.yaml`. There, you will also find a more detailed explanation of each parameter and how to modify it. Keep in mind that pre-training can take several hours.  
+
+The pre-trained models will be saved in subdirectories of `ckpt`. We provide a pre-trained model [here](https://zenodo.org/records/10803099?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6ImI3NTg0OTU0LTI5YWItNDgxZS04OGYyLTU5MmM1MjcwYzJjZiIsImRhdGEiOnt9LCJyYW5kb20iOiIzNzgyNTE5ZGU5N2MzZWI3YjZiZjkwYTIzZjFiMmEwZSJ9.oL6G0WZKxIowSb-2qdP55cPhef1W4yG5iF4PFlsWPpuPROmzRhutJtySzs9q02ACltl0qy9YPJjzB7NvzRMyaw). You can download the `model.pth` file and place it in the `ckpt/gin_concat_R1000_E8000_lambda0.0001/checkpoints` subdirectory.   
+
 
 ## Finetuning  
 To fine-tune a pre-trained representation to a specific task one can run `finetune.py`
@@ -59,7 +62,9 @@ bbbp_split, bbbp_mole_2k = process_dataset("./data/benchmark_data/bbbp/BBBP.csv"
                                                          0.1)
 ```
 
-Here, the `PRETRAINED_MODEL` model should be substituted by a model present in the `ckpt` directory.
+Here, the `PRETRAINED_MODEL` model should be substituted by a model present in the `ckpt` directory. For example, you can write `gin_concat_R1000_E8000_lambda0.0001` to use the provided pre-trained model.  
+
+This is the same model used for the prediction of antimicrobial activity. 
 
 ## Datasets  
 Benchmark datasets are provided by the authors of [MolCLR](https://github.com/yuyangw/MolCLR), and can also be collected from [MoleculeNet](https://moleculenet.org/). You can download the provided zip file ([here](https://drive.google.com/file/d/1aDtN6Qqddwwn2x612kWz9g0xQcuAtzDE/view)) and extract it in the `data/benchmark_data` directory. 
