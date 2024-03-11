@@ -64,7 +64,7 @@ bbbp_split, bbbp_mole_2k = process_dataset("./data/benchmark_data/bbbp/BBBP.csv"
 
 Here, the `PRETRAINED_MODEL` model should be substituted by a model present in the `ckpt` directory. For example, you can write `gin_concat_R1000_E8000_lambda0.0001` to use the provided pre-trained model.  
 
-This is the same model used for the prediction of antimicrobial activity. 
+This is the same model used for the prediction of antimicrobial activity. You can find more details in the corresponding GitHub repository [here](https://github.com/rolayoalarcon/mole_antimicrobial_potential)
 
 ## Datasets  
 Benchmark datasets are provided by the authors of [MolCLR](https://github.com/yuyangw/MolCLR), and can also be collected from [MoleculeNet](https://moleculenet.org/). You can download the provided zip file ([here](https://drive.google.com/file/d/1aDtN6Qqddwwn2x612kWz9g0xQcuAtzDE/view)) and extract it in the `data/benchmark_data` directory. 
