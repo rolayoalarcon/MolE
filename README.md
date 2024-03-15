@@ -4,7 +4,8 @@ This repository contains the implementation of the MolE pre-training framework. 
 
 
 ## Pre-print:
-For more details on MolE, you can check out our pre-print on bioarxiv:
+For more details on MolE, you can check out our pre-print on bioarxiv:  
+
 [**Pre-trained molecular representations enable antimicrobial discovery**](https://www.biorxiv.org/content/10.1101/2024.03.11.584456v1)
 
 ## Installation
