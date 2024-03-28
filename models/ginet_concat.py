@@ -51,13 +51,28 @@ class GINEConv(MessagePassing):
 
 class GINet(nn.Module):
     """
+    Graph Isomorphism Network implementation for graph-level representation learning.
+    Representation is built with concatenation of each layer embeddings.
+
     Args:
-        num_layer (int): the number of GNN layers
-        emb_dim (int): dimensionality of embeddings for each graph layer
-        max_pool_layer (int): the layer from which we use max pool rather than add pool for neighbor aggregation
-        drop_ratio (float): dropout rate
-    Output:
-        node representations
+        num_layer (int): Number of GIN layers.
+        emb_dim (int): Dimension of node embeddings. The final representation will be num_layer * emb_dim.
+        feat_dim (int): Dimension of the output embedding space. This is the input to the BT loss
+        drop_ratio (float): Dropout ratio.
+        pool (str): Pooling method for graph-level representations. Options: 'mean', 'max', 'add'.
+
+    Attributes:
+        num_layer (int): Number of GIN layers.
+        emb_dim (int): Dimension of node embeddings.
+        feat_dim (int): Dimension of the output embedding space.
+        drop_ratio (float): Dropout ratio.
+        x_embedding1 (nn.Embedding): Embedding layer for atom type.
+        x_embedding2 (nn.Embedding): Embedding layer for atom chirality.
+        gnns (nn.ModuleList): List of GIN layers.
+        batch_norms (nn.ModuleList): List of batch normalization layers.
+        pool (function): Pooling function for graph-level representations.
+        feat_lin (nn.Linear): Linear layer for feature dimension reduction.
+        out_lin (nn.Sequential): Output linear layer.
     """
     def __init__(self, num_layer=5, emb_dim=300, feat_dim=256, drop_ratio=0, pool='mean'):
         super(GINet, self).__init__()
@@ -108,6 +123,18 @@ class GINet(nn.Module):
         )
 
     def forward(self, data):
+
+        """
+        Forward pass of the GINet model.
+
+        Args:
+            data (Data): Input graph data.
+
+        Returns:
+            Tensor: Graph-level representation.
+            Tensor: Embedding vector.
+        """
+
         x = data.x
         edge_index = data.edge_index
         edge_attr = data.edge_attr

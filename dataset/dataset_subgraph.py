@@ -44,6 +44,7 @@ BONDDIR_LIST = [
 
 
 def read_smiles(data_path):
+    """Read unlabeled data"""
     smiles_data = []
     with open(data_path) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -55,19 +56,20 @@ def read_smiles(data_path):
             #     smiles_data.append(smiles)
     return smiles_data
 
-"""
-Remove a connected subgraph from the original molecule graph. 
-Args:
-    1. Original graph (networkx graph)
-    2. Index of the starting atom from which the removal begins (int)
-    3. Percentage of the number of atoms to be removed from original graph
-
-Outputs:
-    1. Resulting graph after subgraph removal (networkx graph)
-    2. Indices of the removed atoms (list)
-"""
-
 def removeSubgraph(Graph, center, percent=0.2):
+
+    """
+    FROM MolCLR code!
+    Remove a connected subgraph from the original molecule graph. 
+    Args:
+        1. Original graph (networkx graph)
+        2. Index of the starting atom from which the removal begins (int)
+        3. Percentage of the number of atoms to be removed from original graph
+
+    Outputs:
+        1. Resulting graph after subgraph removal (networkx graph)
+        2. Indices of the removed atoms (list)
+    """
     assert percent <= 1
     G = Graph.copy()
     num = int(np.floor(len(G.nodes)*percent))
@@ -89,13 +91,31 @@ def removeSubgraph(Graph, center, percent=0.2):
 
 
 class MoleculeDataset(Dataset):
+    """
+    Dataset class for handling molecular graph data.
+    Reads unlabeled SMILES, represents them as graphs, creates augmentations
+
+    Args:
+        data_path (str): Path to the data containing SMILES strings.
+
+    """
+
     def __init__(self, data_path):
         super(Dataset, self).__init__()
         self.smiles_data = read_smiles(data_path)
 
     def __getitem__(self, index):
+        """
+        Fetches data corresponding to the given index.
+
+        Args:
+            index (int): Index of the data to retrieve.
+
+        Returns:
+            tuple: A tuple containing the graph data for the two augmentations of the original molecule.
+        """
         mol = Chem.MolFromSmiles(self.smiles_data[index])
-        # mol = Chem.AddHs(mol)
+        
 
         N = mol.GetNumAtoms()
         M = mol.GetNumBonds()
@@ -114,13 +134,9 @@ class MoleculeDataset(Dataset):
             edges.append([bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()])
         molGraph = nx.Graph(edges)
         
-        # Get the graph for i and j after removing subgraphs
-        # G_i, removed_i = removeSubgraph(molGraph, start_i)
-        # G_j, removed_j = removeSubgraph(molGraph, start_j)
 
-        # percent_i, percent_j = random.uniform(0, 0.25), random.uniform(0, 0.25)
+        # Create augmentations
         percent_i, percent_j = 0.25, 0.25
-        # percent_i, percent_j = 0.2, 0.2
         G_i, removed_i = removeSubgraph(molGraph, start_i, percent_i)
         G_j, removed_j = removeSubgraph(molGraph, start_j, percent_j)
         
@@ -129,10 +145,11 @@ class MoleculeDataset(Dataset):
             chirality_idx.append(CHIRALITY_LIST.index(atom.GetChiralTag()))
             atomic_number.append(atom.GetAtomicNum())
 
+        # Node features
         x1 = torch.tensor(type_idx, dtype=torch.long).view(-1,1)
         x2 = torch.tensor(chirality_idx, dtype=torch.long).view(-1,1)
         x = torch.cat([x1, x2], dim=-1)
-        # x shape (N, 2) [type, chirality]
+
 
         # Mask the atoms in the removed list
         x_i = deepcopy(x)
@@ -171,6 +188,7 @@ class MoleculeDataset(Dataset):
         edge_index_j = torch.tensor([row_j, col_j], dtype=torch.long)
         edge_attr_j = torch.tensor(np.array(edge_feat_j), dtype=torch.long)
         
+        # Preapre output for augmentations
         data_i = Data(x=x_i, edge_index=edge_index_i, edge_attr=edge_attr_i)
         data_j = Data(x=x_j, edge_index=edge_index_j, edge_attr=edge_attr_j)
         
@@ -187,6 +205,18 @@ class MoleculeDataset(Dataset):
 
 
 class MoleculeDatasetWrapper(object):
+
+    """
+    Wrapper class for handling molecule dataset loading and splitting.
+
+    Args:
+        batch_size (int): Batch size for loading data.
+        num_workers (int): Number of worker processes for data loading.
+        valid_size (float): Fraction of data to be used for validation.
+        data_path (str): Path to the data containing SMILES strings.
+
+    """
+    
     def __init__(self, batch_size, num_workers, valid_size, data_path):
         super(object, self).__init__()
         self.data_path = data_path

@@ -164,6 +164,18 @@ def determine_outdir(label_name, m_name, t_name, m_type):
 
 def main():
 
+    """
+    Main function for conducting a random search and fine-tuning multiple models on a dataset.
+
+    Reads command-line arguments, reads the configuration file, modifies it if necessary,
+    gathers parameters for random search, determines dataset configuration, and iterates over
+    targets, models, and training iterations to conduct fine-tuning. Results are collected
+    and stored in a dataframe, then written to an output file.
+
+    Returns:
+        None
+    """
+
     # Read the arguments
     given_args = get_args()
     config_file = given_args.config_filepath
@@ -213,9 +225,6 @@ def main():
 
 
     df.to_csv(os.path.join(given_args.experiment_odir, outfile), mode='a', index=False, header=False, sep='\t')
-
-
-
 
 if __name__ == "__main__":
     main()

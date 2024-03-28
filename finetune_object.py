@@ -22,10 +22,10 @@ def _save_config_file(model_checkpoints_folder, param_dictionary):
 
 
 class Normalizer(object):
-    """Normalize a Tensor and restore it later. """
+    """Center and scale tensor. Save parameters to denormalize later."""
 
     def __init__(self, tensor):
-        """tensor is taken as a sample to calculate the mean and std"""
+        """calculate mean and stdv"""
         self.mean = torch.mean(tensor)
         self.std = torch.std(tensor)
 
@@ -45,6 +45,40 @@ class Normalizer(object):
 
 
 class FineTune(object):
+
+    """
+    A class for fine-tuning a chemical representation model on a specific task.
+
+    Args:
+        dataset (object): An object representing the dataset used for fine-tuning.
+        config (dict): A dictionary containing hyperparameter configuration.
+        parent_odir (str): The parent output directory path.
+        model_sdir (str): The subdirectory name for the model.
+
+    Attributes:
+        config (dict): A dictionary hyperparameter configuration.
+        device (str): The device (CPU or GPU) where the model will be trained.
+        log_dir (str): The directory path for storing logs and checkpoints.
+        dataset (object): An object representing the dataset used for fine-tuning.
+        criterion (object): The loss criterion for the fine-tuning task.
+
+    Methods:
+        __init__(self, dataset, config, parent_odir, model_sdir): Initializes the FineTune object.
+        _get_device(self): Determines and returns the device for training.
+        _step(self, model, data, n_iter): Performs a single optimization step.
+        train(self): Trains the chemical representation model.
+        _load_pre_trained_weights(self, model): Loads pre-trained weights for the model if available.
+        _validate(self, model, valid_loader): Validates the model on the validation set.
+        _test(self, model, test_loader): Evaluates the model on the test set.
+
+    Example Usage:
+        # Initialize FineTune object
+        finetuner = FineTune(dataset, config, parent_odir, model_sdir)
+        
+        # Fine-tune the model
+        finetuner.train()
+    """
+
     def __init__(self, dataset, config, parent_odir, model_sdir):
         self.config = config
         self.device = self._get_device()
@@ -77,7 +111,7 @@ class FineTune(object):
 
     def _step(self, model, data, n_iter):
         # get the prediction
-        __, pred = model(data)  # [N,C]
+        __, pred = model(data) 
 
         if self.config['dataset']['task'] == 'classification':
             loss = self.criterion(pred, data.y.flatten())
@@ -189,6 +223,15 @@ class FineTune(object):
         self._test(model, test_loader)
 
     def _load_pre_trained_weights(self, model):
+        """
+        Loads pre-trained weights for the model if available.
+
+        Args:
+            model (object): The chemical representation model.
+
+        Returns:
+            model (object): The model with loaded pre-trained weights if available, else the original model.
+        """
         try:
             checkpoints_folder = os.path.join('./ckpt', self.config['fine_tune_from'], 'checkpoints')
             state_dict = torch.load(os.path.join(checkpoints_folder, 'model.pth'), map_location=self.device)
@@ -318,6 +361,23 @@ class FineTune(object):
 
 
 def finetune(config, model_subdir, finetune_dir):
+
+    """
+    Fine-tunes a chemical representation model based on the given hyperparameter configuration.
+
+    Args:
+        config (dict): A dictionary containing hyperparamter configuration.
+        model_subdir (str): The subdirectory name for the model.
+        finetune_dir (str): The directory path for fine-tuning outputs.
+
+    Returns:
+        dict: A dictionary containing evaluation metrics based on the fine-tuning task.
+            For classification tasks: {"ROC_AUC": roc_auc_score, "PRC_AUC": prc_auc_score}
+            For regression tasks:
+                If task_name is ['qm7', 'qm8', 'qm9']: {"MAE": mean_absolute_error}
+                Otherwise: {"RMSE": root_mean_squared_error}
+    """
+
     dataset = MolTestDatasetWrapper(config['batch_size'], **config['dataset'])
 
     fine_tune = FineTune(dataset, config, finetune_dir, model_subdir)

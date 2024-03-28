@@ -60,6 +60,8 @@ def select_params(original_config, dname, model_name):
 
 def get_predictor(model_params, model_type):
 
+    """Initialize models with the chosen hyperparameters configuration"""
+
      # Classifiers
     if model_type == "RandomForestClassifier":
         model_with_hyperparam = RandomForestClassifier(**model_params)
@@ -79,6 +81,21 @@ def get_predictor(model_params, model_type):
     return model_with_hyperparam
 
 def evaluate_model(fitted_model, data_df, representation_df, config_dict, target_name,split_category):
+
+    """
+    Evaluates a fitted model on a given dataset split
+
+    Args:
+        fitted_model: The trained model to evaluate.
+        data_df (DataFrame): DataFrame containing chemical IDs, target values, and split information.
+        representation_df (DataFrame): DataFrame containing feature representations for the chemical data.
+        config_dict (dict): Dictionary containing configuration parameters.
+        target_name (str): Name of the target variable.
+        split_category (str): Category of the dataset split to evaluate ('train', 'valid', or 'test').
+
+    Returns:
+        float: The evaluation score for the model on the specified split category.
+    """
 
     # Gather the X and y values
     ids = data_df.loc[data_df["split"] == split_category, "chem_id"].values
@@ -102,6 +119,16 @@ def evaluate_model(fitted_model, data_df, representation_df, config_dict, target
     return eval_score
 
 def main():
+    """
+    Main function for conducting experiments with various models on chemical representation and dataset.
+
+    Reads the configuration file and extracts parameters for random search. Determines the task,
+    labels, dataset splits, and model hyperparameters. Iterates over targets, models, and training iterations
+    to train and evaluate models. Outputs the results to a TSV file.
+
+    Returns:
+        None
+    """
 
     # Read config file
     config_original = yaml.load(open("config_representation.yaml", "r"), Loader=yaml.FullLoader)

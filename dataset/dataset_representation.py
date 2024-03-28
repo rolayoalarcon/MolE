@@ -51,7 +51,7 @@ def read_smiles(data_path, smile_col="smiles"):
 
     return smile_df
 
-# Here we can add more molecular descriptors
+# Create molecular graphs
 class MoleculeDataset(Dataset):
     def __init__(self, smile_df):
         super(Dataset, self).__init__()
@@ -72,7 +72,6 @@ class MoleculeDataset(Dataset):
         chirality_idx = []
         atomic_number = []
 
-        # Roberto: Might want to add more features later on. Such as atomic spin
         for atom in mol.GetAtoms():
             if atom.GetAtomicNum() == 0:
                 print(self.id_data[index])
@@ -213,6 +212,21 @@ def split_dataset(smile_df, valid_size, test_size, split_strategy):
 
 def batch_representation(smile_df, dl_model, batch_size= 10_000, id_is_str=True, device="cuda:0"):
     
+    """
+    Generate molecular representations in batches using a pre-trained mdoel.
+
+    Args:
+        smile_df (DataFrame): DataFrame containing SMILES representations of molecules.
+        dl_model (torch.nn.Module): Deep learning model used for generating representations.
+        batch_size (int, optional): Batch size for processing molecules (default is 10_000).
+        id_is_str (bool, optional): Whether the molecule identifiers are strings (default is True).
+        device (str, optional): Device to use for computation (default is "cuda:0").
+
+    Returns:
+        DataFrame: DataFrame containing molecular representations.
+
+    """
+    
     # First we create a list of graphs
     molecular_graph_dataset = MoleculeDataset(smile_df)
     graph_list = [g for g in molecular_graph_dataset]
@@ -267,6 +281,20 @@ def batch_representation(smile_df, dl_model, batch_size= 10_000, id_is_str=True,
     return chem_representation
 
 def load_pretrained_model(pretrain_architecture, pretrained_model, pretrained_dir = "./ckpt", device="cuda:0"):
+
+    """
+    Load a pretrained model based on the given architecture and model name.
+
+    Args:
+        pretrain_architecture (str): Architecture of the pretrained model.
+        pretrained_model (str): Name of the pretrained model.
+        pretrained_dir (str): Directory containing the pretrained model checkpoints.
+        device (str): Device to load the model on (default is "cuda:0").
+
+    Returns:
+        torch.nn.Module: Pretrained model loaded with its weights.
+
+    """
 
     # Read model configuration
     config = yaml.load(open(os.path.join(pretrained_dir, pretrained_model, "checkpoints/config.yaml"), "r"), Loader=yaml.FullLoader)
@@ -329,6 +357,21 @@ def generate_fps(smile_df):
     return fps_dataframe
 
 def process_dataset(dataset_path, pretrain_architecture, pretrained_model, split_approach, validation_proportion, test_proportion):
+    """
+    Process the dataset by reading, splitting, and generating static representations.
+
+    Args:
+        dataset_path (str): Path to the dataset file.
+        pretrain_architecture (str): Pretraining architecture used for generating representations.
+        pretrained_model (str): Path to the pretrained model file or the name of the pretraining architecture.
+        split_approach (str): Method for splitting the dataset into train, validation, and test sets.
+        validation_proportion (float): Proportion of the dataset to be used for validation.
+        test_proportion (float): Proportion of the dataset to be used for testing.
+
+    Returns:
+        tuple: A tuple containing the splitted dataset and its representation.
+
+    """
 
     # First we read in the smiles as a dataframe
     smiles_df = read_smiles(dataset_path)

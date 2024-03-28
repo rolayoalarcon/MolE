@@ -58,6 +58,37 @@ def determine_dirname(config_dict):
 
 
 class PretrainChemRep(object):
+
+    """
+    A class for pretraining a chemical representation model with MolE strategy.
+
+    Args:
+        dataset (object): A dataset object containing the dataset splits and augmented graphs.
+        config (dict): A dictionary containing pre-training hyperparameters.
+
+    Attributes:
+        config (dict): A dictionary containing pre-training hyperparameters.
+        device (str): The device (CPU or GPU) where the model will be trained.
+        log_dir (str): The directory path for storing model checkpoints and config.
+        dataset (object):  dataset object containing the dataset splits and augmented graphs.
+        btwin_objective (object): An object calculating the Barlow Twins objective.
+
+    Methods:
+        __init__(self, dataset, config): Initializes the PretrainChemRep object.
+        _get_device(self): Determines and returns the device for training.
+        _step(self, model, xis, xjs): Performs a single optimization step.
+        train(self): Trains the chemical representation model.
+        _load_pre_trained_weights(self, model): Loads pre-trained weights for the model if available.
+        _validate(self, model, valid_loader): Validates the model on the validation set.
+
+    Example Usage:
+        # Initialize PretrainChemRep object
+        pretrainer = PretrainChemRep(dataset, config)
+        
+        # Train the model
+        pretrainer.train()
+    """
+
     def __init__(self, dataset, config):
         self.config = config
         self.device = self._get_device()
@@ -82,18 +113,32 @@ class PretrainChemRep(object):
         return device
 
     def _step(self, model, xis, xjs):
-       
-        # get the representations and the projections
-        _, zis = model(xis)  # [N,C]
+        """
+        Performs a single optimization step.
 
-        # get the representations and the projections
-        _, zjs = model(xjs)  # [N,C]
+        Args:
+            model (object): The chemical representation model.
+            xis (tensor): Input data for the first augmentation.
+            xjs (tensor): Input data for the second augmentation.
+
+        Returns:
+            loss (tensor): The calculated loss for the optimization step.
+        """
+       
+        # get the representations and the embeddings
+        _, zis = model(xis)
+
+        # get the representations and the embeddings
+        _, zjs = model(xjs) 
 
         loss = self.btwin_objective(zis, zjs)
 
         return loss
 
     def train(self):
+        """
+        Trains the chemical representation model.
+        """
 
         # Establish where the model will be saved
         model_checkpoints_folder = os.path.join(self.log_dir, 'checkpoints')
@@ -233,6 +278,17 @@ def get_args():
     return args
 
 def main():
+
+    """
+    Main function for running pre-training of a chemical representation model.
+
+    Reads command-line arguments and configuration file, modifies the configuration if necessary,
+    initializes dataset and pretraining objects, and executes the pretraining process.
+
+    Returns:
+        None
+    """
+
     # Argument readings
     given_args = get_args()
 

@@ -50,15 +50,22 @@ class GINEConv(MessagePassing):
 
 
 class GINet(nn.Module):
+
     """
+    GIN for graph-based for fintuning representations to classification or regression tasks.
+
     Args:
-        num_layer (int): the number of GNN layers
-        emb_dim (int): dimensionality of embeddings
-        drop_ratio (float): dropout rate
-        gnn_type: gin, gcn, graphsage, gat
-    Output:
-        node representations
+        task (str): Type of task, either 'classification' or 'regression'.
+        num_layer (int): Number of GIN layers.
+        emb_dim (int): Dimension of node embeddings.
+        feat_dim (int): Dimension of output features.
+        drop_ratio (float): Dropout ratio.
+        pool (str): Pooling method for graph-level representation, options are 'mean', 'max', or 'add'.
+        pred_n_layer (int): Number of layers in the predictor head.
+        pred_act (str): Activation function for the predictor head, options are 'relu' or 'softplus'.
+
     """
+    
     def __init__(self, 
         task='classification', num_layer=5, emb_dim=300, feat_dim=512, 
         drop_ratio=0, pool='mean', pred_n_layer=2, pred_act='softplus'
@@ -129,6 +136,16 @@ class GINet(nn.Module):
         self.pred_head = nn.Sequential(*pred_head)
 
     def forward(self, data):
+        """
+        Forward pass of the GINet model.
+
+        Args:
+            data (Data): Input graph data object.
+
+        Returns:
+            Tensor: Graph-level representation.
+            Tensor: Model predictions.
+        """
         x = data.x
         edge_index = data.edge_index
         edge_attr = data.edge_attr

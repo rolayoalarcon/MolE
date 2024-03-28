@@ -92,6 +92,32 @@ class GCNConv(MessagePassing):
 
 
 class GCN(nn.Module):
+
+    """
+    Graph Convolutional Network implementation for graph-level representation learning.
+    Representation is built with concatenation of each layer embeddings.
+
+    Args:
+        num_layer (int): Number of GIN layers.
+        emb_dim (int): Dimension of node embeddings. The final representation will be num_layer * emb_dim.
+        feat_dim (int): Dimension of the output embedding space. This is the input to the BT loss
+        drop_ratio (float): Dropout ratio.
+        pool (str): Pooling method for graph-level representations. Options: 'mean', 'max', 'add'.
+
+    Attributes:
+        num_layer (int): Number of GCN layers.
+        emb_dim (int): Dimension of node embeddings.
+        feat_dim (int): Dimension of the output embedding space.
+        drop_ratio (float): Dropout ratio.
+        x_embedding1 (nn.Embedding): Embedding layer for atom type.
+        x_embedding2 (nn.Embedding): Embedding layer for atom chirality.
+        gnns (nn.ModuleList): List of GCN layers.
+        batch_norms (nn.ModuleList): List of batch normalization layers.
+        pool (function): Pooling function for graph-level representations.
+        feat_lin (nn.Linear): Linear layer for feature dimension reduction.
+        out_lin (nn.Sequential): Output linear layer.
+    """
+
     def __init__(self, num_layer=5, emb_dim=300, feat_dim=256, drop_ratio=0, pool='mean'):
         super(GCN, self).__init__()
         self.num_layer = num_layer
@@ -144,6 +170,16 @@ class GCN(nn.Module):
         )
 
     def forward(self, data):
+        """
+        Forward pass of the GCN model.
+
+        Args:
+            data (Data): Input graph data.
+
+        Returns:
+            Tensor: Graph-level representation.
+            Tensor: Embedding vector.
+        """
         x = data.x
         edge_index = data.edge_index
         edge_attr = data.edge_attr
