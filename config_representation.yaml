@@ -2,6 +2,8 @@ task_name: "clintox"             # Name of the benchmark to be predicted inlcudi
                                  # classifications: BBBP/BACE/ClinTox/Tox21/HIV/SIDER/MUV
                                  # regressions: FreeSolv/ESOL/Lipo/qm7/qm8/qm9
 
+device: "cuda:0"                  # Device to be used for training. Can be "cuda" or "cpu"
+
 model_type: "XGBClassifier"              # ML algorithm to be used for prediction. Can be one of: XGBClassifier, XGBRegressor, RFClassifier, or RFRegressor
 pretrain_architecture: "gin_concat"      # The MolE pre-training architechture. Can be: gin_concat, gin_noconcat, gcn_concat, or gcn_noconcat
 pretrained_model: "gin_concat_R1000_E8000_lambda0.0001" # The pre-trained model to be used for featurizing the data. 

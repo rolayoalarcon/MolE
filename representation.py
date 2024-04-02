@@ -141,12 +141,13 @@ def main():
 
     # Determine the split and representation parameters
     split_df, features_df = process_dataset(smile_datapath,
-                                            split_dataset = True,
+                                            dataset_split = True,
                                             pretrain_architecture=config_original["pretrain_architecture"],
                                             pretrained_model=config_original["pretrained_model"],
                                             split_approach=config_original["dataset"]["splitting"],
                                             validation_proportion=config_original["dataset"]["validation_size"],
-                                            test_proportion=config_original["dataset"]["test_size"]) 
+                                            test_proportion=config_original["dataset"]["test_size"],
+                                            device=config_original["device"]) 
     
     # Determine the model hyperparameters to be used
     model_param_dict_original = determine_predictor(config_original)
