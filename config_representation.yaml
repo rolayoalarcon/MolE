@@ -4,7 +4,9 @@ task_name: "clintox"             # Name of the benchmark to be predicted inlcudi
 
 model_type: "XGBClassifier"              # ML algorithm to be used for prediction. Can be one of: XGBClassifier, XGBRegressor, RFClassifier, or RFRegressor
 pretrain_architecture: "gin_concat"      # The MolE pre-training architechture. Can be: gin_concat, gin_noconcat, gcn_concat, or gcn_noconcat
-pretrained_model: "gin_concat_R1000_E8000_lambda0.0001" # The pre-trained model to be used for featurizing the data. This should be a sub-directory of ./ckpt
+pretrained_model: "gin_concat_R1000_E8000_lambda0.0001" # The pre-trained model to be used for featurizing the data. 
+                                                        # This should be a sub-directory of ./ckpt OR
+                                                        # "MolCLR" or "ECFP4".                                                               
 
 dataset:
   validation_size: 0.1               # ratio of validation data

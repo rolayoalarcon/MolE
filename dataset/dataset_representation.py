@@ -300,8 +300,13 @@ def load_pretrained_model(pretrain_architecture, pretrained_model, pretrained_di
     config = yaml.load(open(os.path.join(pretrained_dir, pretrained_model, "checkpoints/config.yaml"), "r"), Loader=yaml.FullLoader)
     model_config = config["model"]
 
-    # Instantiate model
-    if pretrain_architecture == "gin_concat":
+    # Determine if model is MolCLR
+    if pretrained_model == "MolCLR":
+        from models.gin_molclr import GINet
+        model = GINet(**model_config).to(device)
+
+    # Instantiate MolE models
+    elif pretrain_architecture == "gin_concat":
         from models.ginet_concat import GINet
         model = GINet(**model_config).to(device)
 
@@ -316,10 +321,6 @@ def load_pretrained_model(pretrain_architecture, pretrained_model, pretrained_di
     elif pretrain_architecture == "gcn_noconcat":
         from models.gcn_noconcat import GCN
         model = GCN(**model_config).to(device)
-    
-    elif pretrain_architecture == "gin_molclr":
-        from models.gin_molclr import GINet
-        model = GINet(**model_config).to(device)
     
     # Load pre-trained weights
     model_pth_path = os.path.join(pretrained_dir, pretrained_model, "checkpoints/model.pth")
@@ -356,17 +357,26 @@ def generate_fps(smile_df):
 
     return fps_dataframe
 
-def process_dataset(dataset_path, pretrain_architecture, pretrained_model, split_approach, validation_proportion, test_proportion):
+def process_dataset(dataset_path, 
+                    dataset_split = True,
+                    pretrained_model=None,
+                    pretrain_architecture=None, 
+                    split_approach=None, 
+                    validation_proportion=None, 
+                    test_proportion=None,
+                    device="cuda:0"):
     """
     Process the dataset by reading, splitting, and generating static representations.
 
     Args:
         dataset_path (str): Path to the dataset file.
+        dataset_split (bool): Whether to split the dataset into train, validation, and test sets.
+        pretrained_model (str): Path to the pretrained model file or the name of the pretraining architecture. Can also be "MolCLR" or "ECFP4".
         pretrain_architecture (str): Pretraining architecture used for generating representations.
-        pretrained_model (str): Path to the pretrained model file or the name of the pretraining architecture.
         split_approach (str): Method for splitting the dataset into train, validation, and test sets.
         validation_proportion (float): Proportion of the dataset to be used for validation.
         test_proportion (float): Proportion of the dataset to be used for testing.
+        device (str): Device to use for computation (default is "cuda:0"). Can also be "cpu".
 
     Returns:
         tuple: A tuple containing the splitted dataset and its representation.
@@ -376,17 +386,22 @@ def process_dataset(dataset_path, pretrain_architecture, pretrained_model, split
     # First we read in the smiles as a dataframe
     smiles_df = read_smiles(dataset_path)
 
-    # The we split the dataset into train, validation and test
-    splitted_smiles_df = split_dataset(smiles_df, validation_proportion, test_proportion, split_approach)
+    # We split the dataset into train, validation and test if requested
+    if dataset_split:
+        splitted_smiles_df = split_dataset(smiles_df, validation_proportion, test_proportion, split_approach)
 
     # Determine the representation
-    if pretrain_architecture == "ECFP4":
-        return splitted_smiles_df, generate_fps(smiles_df)
+    if pretrained_model == "ECFP4":
+        udl_representation = generate_fps(smiles_df)
+    
+    else:
+        # Now we load our pretrained model
+        pmodel = load_pretrained_model(pretrain_architecture, pretrained_model, device=device)
+        # Obtain the requested representation
+        udl_representation = batch_representation(smiles_df, pmodel, device=device)
 
-    # Now we load our pretrained model
-    pmodel = load_pretrained_model(pretrain_architecture, pretrained_model)
-
-    # Obtain the requested representation
-    udl_representation = batch_representation(smiles_df, pmodel)
-
-    return splitted_smiles_df, udl_representation
+    # Determine return
+    if dataset_split:
+        return splitted_smiles_df, udl_representation
+    else:
+        return udl_representation

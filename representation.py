@@ -141,6 +141,7 @@ def main():
 
     # Determine the split and representation parameters
     split_df, features_df = process_dataset(smile_datapath,
+                                            split_dataset = True,
                                             pretrain_architecture=config_original["pretrain_architecture"],
                                             pretrained_model=config_original["pretrained_model"],
                                             split_approach=config_original["dataset"]["splitting"],
