@@ -60,15 +60,20 @@ Hyperparameters can be found and modified in `config_representation.yaml`.
 It is also  possible to obtain the static representation for a collection of SMILES using the `process_dataset()` function described in `dataset/dataset_representation.py`. An example of how this can be done is shown in `examine_representation.ipynb`
 
 ```
-bbbp_split, bbbp_mole_2k = process_dataset("./data/benchmark_data/bbbp/BBBP.csv",
-                                                         "gin_concat",
-                                                         PRETRAINED_MODEL,
-                                                         "scaffold",
-                                                         0.1,
-                                                         0.1)
+bbbp_split, bbbp_mole = process_dataset(dataset_path="./data/benchmark_data/bbbp/BBBP.csv",
+
+                                           # Parameters for splitting
+                                           dataset_split=True,
+                                           split_approach="scaffold",
+                                           validation_proportion=0.1,
+                                           test_proportion=0.1,
+                                           
+                                           # Details about pre-trained representation
+                                           pretrain_architecture="gin_concat",
+                                           pretrained_model=PRETRAINED_MODEL)
 ```
 
-Here, the `PRETRAINED_MODEL` model should be substituted by a model present in the `ckpt` directory. For example, you can write `gin_concat_R1000_E8000_lambda0.0001` to use the provided pre-trained model.  
+Here, the `PRETRAINED_MODEL` model should be substituted by a model present in the `ckpt` directory. For example, you can write `gin_concat_R1000_E8000_lambda0.0001` to use the provided pre-trained model. One can also use this function to obtain the ECFP4 representation (```pretrained_model = "ECFP4"```), avoid data splitting with ```dataset_split = False```, and use CPUs by setting ```device="cpu"``` as function parameters.
 
 ## Datasets  
 Benchmark datasets are provided by the authors of [MolCLR](https://github.com/yuyangw/MolCLR), and can also be collected from [MoleculeNet](https://moleculenet.org/). You can download the provided zip file ([here](https://drive.google.com/file/d/1aDtN6Qqddwwn2x612kWz9g0xQcuAtzDE/view)) and extract it in the `data/benchmark_data` directory. 
