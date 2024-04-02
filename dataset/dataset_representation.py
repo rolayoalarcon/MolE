@@ -371,7 +371,7 @@ def process_dataset(dataset_path,
     Args:
         dataset_path (str): Path to the dataset file.
         dataset_split (bool): Whether to split the dataset into train, validation, and test sets.
-        pretrained_model (str): Path to the pretrained model file or the name of the pretraining architecture. Can also be "MolCLR" or "ECFP4".
+        pretrained_model (str): The name of the pretraining directory. Can also be "MolCLR" or "ECFP4".
         pretrain_architecture (str): Pretraining architecture used for generating representations.
         split_approach (str): Method for splitting the dataset into train, validation, and test sets.
         validation_proportion (float): Proportion of the dataset to be used for validation.
