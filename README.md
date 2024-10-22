@@ -31,6 +31,12 @@ In this repository, we provide the necessary scripts to:
 
 In all instances, arguments can be specified in a `.yaml` file or as command line arguments. Whenever a `.yaml` is provided command line arguments are ignored. 
 
+
+### Pre-trained MolE
+To help you get started we provide a pre-trained model [here](https://zenodo.org/records/10803099?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6ImI3NTg0OTU0LTI5YWItNDgxZS04OGYyLTU5MmM1MjcwYzJjZiIsImRhdGEiOnt9LCJyYW5kb20iOiIzNzgyNTE5ZGU5N2MzZWI3YjZiZjkwYTIzZjFiMmEwZSJ9.oL6G0WZKxIowSb-2qdP55cPhef1W4yG5iF4PFlsWPpuPROmzRhutJtySzs9q02ACltl0qy9YPJjzB7NvzRMyaw). 
+You can download the `model.pth` file and place it in the `ckpt/gin_concat_R1000_E8000_lambda0.0001/checkpoints` subdirectory. 
+This model was used for our task of antimicrobial prediction (see [mole_antimicrobial_potential](https://github.com/rolayoalarcon/mole_antimicrobial_potential)).
+
 ## Pre-training
 To pre-train the MolE framework you can use `pretrain.py` script. This script receives the hyperparamters to pre-train molecular representation using the MolE framework. Hyperparameters can be given either in `.yaml` file or as command line arguments. If a `.yaml` file is provided, command line arguments are ignored. The program will return a model.pth file with the pre-trained weights and config.yaml file with the indicated hyperparameters.
   
