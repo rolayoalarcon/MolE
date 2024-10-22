@@ -1,0 +1,21 @@
+task_name: "BBBP"             # Name of the benchmark to be predicted inlcuding
+                                 # classifications: BBBP/BACE/ClinTox/Tox21/HIV/SIDER/MUV
+                                 # regressions: FreeSolv/ESOL/Lipo/qm7/qm8/qm9
+
+gpu: "cuda:0"                  # Device to be used for training. Can be "cuda" or "cpu"
+
+ml_model: "XGBoost"              # ML algorithm to be used for prediction. Can be one of: XGBoost or RandomForest
+pretrained_model: "gin_concat_R1000_E8000_lambda0.0001" # The pre-trained model to be used for featurizing the data. 
+                                                        # This should be a sub-directory of ./ckpt OR
+                                                        # "MolCLR" or "ECFP4".                                                               
+
+dataset:
+  validation_size: 0.1               # ratio of validation data
+  test_size: 0.1                # ratio of test data
+  splitting: scaffold           # data splitting (i.e., random/scaffold)
+
+random_search:
+  n_models: 5                   # number of models to be trained
+  n_trains: 3                  # number of times to train each model
+
+metrics_outdir: "metrics_outdir" # directory to save the metrics

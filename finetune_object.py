@@ -173,7 +173,7 @@ class FineTune(object):
 
         optimizer = torch.optim.Adam(
             [{'params': base_params, 'lr': self.config['init_base_lr']}, {'params': params}],
-            self.config['init_lr'], weight_decay=eval(self.config['weight_decay'])
+            self.config['init_lr'], weight_decay=self.config['weight_decay']
         )
 
         model_checkpoints_folder = os.path.join(self.log_dir, 'checkpoints')

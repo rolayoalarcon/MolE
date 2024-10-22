@@ -82,7 +82,6 @@ class GINet(nn.Module):
         self.drop_ratio = drop_ratio
 
         self.concat_dim = num_layer * emb_dim
-
         if self.concat_dim != self.feat_dim:
             print(f"Representation Dimension ({self.concat_dim}) - Embedding dimension ({self.feat_dim})")
 

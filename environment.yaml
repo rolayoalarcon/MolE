@@ -1,0 +1,27 @@
+name: moleß
+channels:
+  - pytorch
+  - nvidia
+  - rmg
+  - conda-forge
+  - rdkit
+  - defaults
+dependencies:
+  - python=3.8
+  - pytorch=2.2.1
+  - pytorch-cuda=11.8
+  - rdkit=2022.3.3
+  - pip
+  - pip:
+    - xgboost==1.6.2
+    - pandas==2.0.3
+    - PyYAML==6.0.1
+    - torch_geometric==2.5.0
+    - openpyxl
+    - pubchempy==1.0.4
+    - matplotlib==3.7.5
+    - seaborn==0.13.2
+    - tqdm
+    - scikit-learn==1.0.2
+    - umap-learn==0.5.5
+    

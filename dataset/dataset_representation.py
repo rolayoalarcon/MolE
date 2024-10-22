@@ -35,7 +35,7 @@ BONDDIR_LIST = [
     Chem.rdchem.BondDir.ENDDOWNRIGHT
 ]
 
-def read_smiles(data_path, smile_col="smiles"):
+def read_smiles(data_path, smile_col="smiles", id_col=None):
     
     # Read the data
     smile_df = pd.read_csv(data_path)
@@ -44,10 +44,20 @@ def read_smiles(data_path, smile_col="smiles"):
     smile_df = smile_df.dropna()
 
     # Remove invalid smiles
-    smile_df = smile_df[smile_df["smiles"].apply(lambda x: Chem.MolFromSmiles(x) is not None)]
+    smile_df = smile_df[smile_df[smile_col].apply(lambda x: Chem.MolFromSmiles(x) is not None)]
 
     # Add chem_id column
-    smile_df["chem_id"] = [f"chem_{i}" for i in range(smile_df.shape[0])]
+    if id_col is None:
+        smile_df["chem_id"] = [f"chem_{i}" for i in range(smile_df.shape[0])]
+    
+    else:
+        smile_df["chem_id"] = smile_df[id_col]
+    
+    # Create smiles column
+    if smile_col !="smiles":
+        smile_df["smiles"] = smile_df[smile_col]
+    
+    #smile_df = smile_df[["chem_id", "smiles"]]
 
     return smile_df
 
@@ -364,7 +374,9 @@ def process_dataset(dataset_path,
                     split_approach=None, 
                     validation_proportion=None, 
                     test_proportion=None,
-                    device="cuda:0"):
+                    device="cuda:0",
+                    smiles_colnname="smiles",
+                    id_colname=None):
     """
     Process the dataset by reading, splitting, and generating static representations.
 
@@ -384,7 +396,7 @@ def process_dataset(dataset_path,
     """
 
     # First we read in the smiles as a dataframe
-    smiles_df = read_smiles(dataset_path)
+    smiles_df = read_smiles(dataset_path, smile_col=smiles_colnname, id_col=id_colname)
 
     # We split the dataset into train, validation and test if requested
     if dataset_split:

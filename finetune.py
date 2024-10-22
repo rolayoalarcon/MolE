@@ -3,7 +3,7 @@ import yaml
 import random
 import pandas as pd
 from datetime import datetime
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from finetune_object import finetune
 from dataset.dataset_test import MolTestDatasetWrapper
 
@@ -131,24 +131,197 @@ def get_args():
     """
     Parses command line arguments for finetuning
     """
-    parser = ArgumentParser()
-    parser.add_argument("-c", "--config_filepath", dest="config_filepath",
-                        default="config_finetune.yaml",
-                        help="Path to the finetune config file", metavar="FILE")
+    parser=ArgumentParser(prog="Fine-tune a pre-trained model for a specific prediction task.",
+                            description="FINE-TUNE A PRE-TRAINED MODEL. This program receives the hyperparamters to fine-tune a pre-trained molecular representation \
+                                for a given benchmark prediction task. Hyperparameters can be given either in yaml file or as command line arguments. \
+                                If a yaml file is provided, command line arguments are ignored. Several values can be given to some hyperparamters to perform a random search.  \
+                            The program will return a model.pth file with the fine-tuned weights and config.yaml file with the indicated hyperparameters. Addionally, it will return a file with the performance metrics.",
+                            usage="python finetune.py -y config_finetune.yaml | python finetune.py [options]",
+                            formatter_class=ArgumentDefaultsHelpFormatter)
+
+    # YAML config
+    parser.add_argument("--config_yaml", dest="config_yaml",
+                        help="Complete path to yaml file that contains the parameters for model pre-training")
+
+    # Training arguments
+    trainargs = parser.add_argument_group("Training parameters", "Parameters for model finetuning.")
+    trainargs.add_argument("--batch_size", dest="batch_size", nargs="*",
+                        default=[32, 101, 512, 800],
+                        help="Possible number of compounds in each batch during pre-training. Several options can be given for random search.")
     
-    parser.add_argument("-t", "--task_name", dest="task_name", 
-                        default="None",
-                        help="benchmark task to use")
+    trainargs.add_argument("--epochs", dest="epochs",
+                        default=1000, type=int,
+                        help="Total number of epochs to pre-train.")
+    
+    trainargs.add_argument("--eval_every_n_epochs", dest="eval_every_n_epochs",
+                        default=1, type=int,
+                        help="Validation frequency.")
+    
+    trainargs.add_argument("--log_every_n_steps", dest="log_every_n_steps",
+                        default=50, type=int,
+                        help="Print training log frequency.")
+    
+    trainargs.add_argument("--fine_tune_from", dest="fine_tune_from",
+                        default="gin_concat_R1000_E8000_lambda0.0001",
+                        help="Name of the pre-trained weights that should be fine-tuned. Should be a sub-directory of ./ckpt.")
+    
+    trainargs.add_argument("--init_lr", 
+                        nargs="*",
+                        dest="init_lr",
+                        type=float,
+                        default=[0.0005, 0.001], 
+                        help="Possible inital learning rate for the PREDICTION head. Several can be given for random search.")
+    
+    trainargs.add_argument("--init_base_lr", 
+                        nargs="*",
+                        dest="init_base_lr",
+                        type=float,
+                        default=[0.00005, 0.0001, 0.0002, 0.0005],
+                        help="Possible initial learning rate for the PRE-TRAINED GNN encoder. Several can be given for random search.")
+    
+    trainargs.add_argument("--weight_decay", 
+                        dest="weight_decay",
+                        type=float,
+                        default=0.00001,
+                        help="Weight decay for ADAM.")
+    
+    trainargs.add_argument("--gpu", 
+                        dest="gpu",
+                        type=str,
+                        default="cuda:0",
+                        help="Name of the cuda device to run pre-training. Can also be 'cpu'.")
+
+    trainargs.add_argument("--task_name", dest="task_name", 
+                        type=str,
+                        default="BBBP",
+                        choices=["BBBP", "BACE", "ClinTox", "Tox21", "HIV", "SIDER",
+                                 "FreeSolv", "ESOL", "Lipo", "qm7", "qm8"],
+                        help="Name of benchmark tasks for fine-tuning.")
+
+    # Prediction head parameters
+    modelargs = parser.add_argument_group("Prediction head", "Parameters for the prediction head.")
+    modelargs.add_argument("--drop_ratio", 
+                        dest="drop_ratio",
+                        type=float,
+                        nargs="*",
+                        default=[0, 0.1, 0.3, 0.5],
+                        help="Possible dropout rate. Several can be given for random search.")
+    
+    modelargs.add_argument("--pred_n_layer", dest="pred_n_layer",
+                        type=int,
+                        nargs="*",
+                        default=[1,2],
+                        help="Possible number of layers on prediction head. Several can be given for random search.")
+    
+    modelargs.add_argument("--pred_act", dest="pred_act",
+                           type=str,
+                           default=["softplus", "relu"],
+                           nargs="*",
+                           help="Possible activation functions on the prediction head. At the moment, only softplus and relu are supported.")
+    
+    dataargs = parser.add_argument_group("Dataset", "Arguments for how to handle benchmark task.")
+    dataargs.add_argument("--num_workers",
+                          type=int,
+                          default=10,
+                          dest="num_workers",
+                          help="Dataloader number of workers.")
+    
+    dataargs.add_argument("--valid_size", dest="valid_size",
+                          type=float,
+                          default=0.1,
+                          help="Fraction of molecules to use for validation.")
+    
+    dataargs.add_argument("--test_size", dest="test_size",
+                            type=float,
+                            default=0.1,
+                            help="Fraction of molecules to use for testing.")
+    
+    dataargs.add_argument("--splitting", dest="splitting",
+                          type=str,
+                          default="scaffold",
+                          choices=["random", "scaffold"],
+                          help="Method to split the dataset into training, validation, and testing sets.")
+    
+    randargs = parser.add_argument_group("Random search", "Arguments for random search.")
+    randargs.add_argument("--n_models", dest="n_models",
+                          type=int,
+                          default=5,
+                          help="Number of model configurations to train.")
+    randargs.add_argument("--n_trains", dest="n_trains",
+                            type=int,
+                            default=3,
+                            help="Number of training iterations for each model configuration")
+
+
+    oarrgs = parser.add_argument_group("Output", "Arguments for output directories.")
    
-    parser.add_argument("-m", "--model_outdir", dest="model_odir", default="finetune",
+    oarrgs.add_argument("--model_outdir", dest="model_outdir", default="finetune",
                         help="Directory where finetuned models are written")
     
-    parser.add_argument("-e", "--experiment_odir", dest="experiment_odir", default="experiments",
+    oarrgs.add_argument("--metrics_outdir", dest="metrics_outdir", default="output_metrics",
                         help="Directory where performance metrics are written")
    
     args = parser.parse_args()
 
     return args
+
+
+def gather_pretraining_config(pretrain_name):
+    """
+    This function returns a config dictionary that contains pre-training hyperparameters.
+    """
+
+    with open(os.path.join("ckpt", pretrain_name, "checkpoints", "config.yaml"), "r") as file:
+        pretrain_config_dict = yaml.load(file, Loader=yaml.FullLoader)
+
+    # We are only interested in the model and model_type keys
+    pretrain_config_dict = {key: value for key, value in pretrain_config_dict.items() if key in ["model", "model_type"]}
+
+    # Delete drop_ratio
+    del pretrain_config_dict["model"]["drop_ratio"]
+    
+    return pretrain_config_dict
+
+
+def gather_config():
+    """
+    This function returns a config dictionary to be used during fine-tuning.
+    """
+
+    # Parse command line arguments
+    args = get_args()
+
+    # If a config file is given, then parameters are read from there
+    if args.config_yaml != None:
+        print(f"Reading fine-tuning arguments from {args.config_yaml}. Ignoring command line arguments.")
+
+        with open(args.config_yaml, "r") as file:
+            config_dict = yaml.load(file, Loader=yaml.FullLoader)
+
+    else:        
+        # Else we have to build a dictionary with the same config structure
+        config_dict = vars(args)
+
+        # Build model param dictionary
+        config_subdicts = {"model": {k: config_dict[k] for k in ["drop_ratio", "pred_n_layer", "pred_act"]},
+                           "dataset": {k: config_dict[k] for k in ["num_workers", "valid_size", "test_size", "splitting"]},
+                           "random_search": {k: config_dict[k] for k in ["n_models", "n_trains"]}}
+        
+        # Update config_dict
+        for key in ["drop_ratio", "pred_n_layer", "pred_act", "num_workers", "valid_size", "test_size", "splitting", "n_models", "n_trains"]:
+            del config_dict[key]
+        
+        config_dict.update(config_subdicts)
+    
+    # Read pre-training config
+    pretrain_config = gather_pretraining_config(config_dict["fine_tune_from"])
+
+    # Add model_type and model to config_dict
+    config_dict["model_type"] = pretrain_config["model_type"]
+    config_dict["model"].update(pretrain_config["model"]) 
+
+    return config_dict
+
 
 def determine_outdir(label_name, m_name, t_name, m_type):
     base_model_str = "{model_type}_{label_name}_{model_name}_{training_name}_{datetime_str}"
@@ -177,20 +350,16 @@ def main():
     """
 
     # Read the arguments
-    given_args = get_args()
-    config_file = given_args.config_filepath
-
-    # Read the random search parameters
-    config_originial = yaml.load(open(config_file, "r"), Loader=yaml.FullLoader)
-
-    # Determine whether the confing file has to be modified
-    if given_args.task_name != "None":
-        config_originial["task_name"] = given_args.task_name
-    
+    config_originial = gather_config()
 
     # Gather the number of models and the number of training iterations for each model
     rsearch_params = config_originial.pop("random_search")
 
+    # Pop the model and experiment output directory
+    model_odir = config_originial.pop("model_outdir")
+    experiment_odir = config_originial.pop("metrics_outdir")
+
+    # Determine the dataset configuration
     task_config, label_list = determine_dataset(config_originial)
 
     # Iterate over targets
@@ -210,7 +379,7 @@ def main():
 
                 model_directory = determine_outdir(target, model_name, training_name, model_config["model_type"])
 
-                result_dict = finetune(model_config, model_directory, given_args.model_odir)
+                result_dict = finetune(model_config, model_directory, model_odir)
 
                 for key, value in result_dict.items():
                     results_list.append([target, key, value, model_name, training_name, model_directory])
@@ -219,12 +388,12 @@ def main():
     df = pd.DataFrame(results_list)
 
     # Write the output
-    os.makedirs(given_args.experiment_odir, exist_ok=True)
+    os.makedirs(experiment_odir, exist_ok=True)
 
     outfile = f'{config_originial["task_name"]}_{config_originial["fine_tune_from"]}.tsv.gz'
 
 
-    df.to_csv(os.path.join(given_args.experiment_odir, outfile), mode='a', index=False, header=False, sep='\t')
+    df.to_csv(os.path.join(experiment_odir, outfile), mode='a', index=False, header=False, sep='\t')
 
 if __name__ == "__main__":
     main()

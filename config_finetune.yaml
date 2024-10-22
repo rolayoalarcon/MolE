@@ -5,22 +5,14 @@ log_every_n_steps: 50           # print training log frequency
 fine_tune_from: gin_concat_R1000_E8000_lambda0.0001  # sub directory of pre-trained model in ./ckpt
 init_lr: [0.0005, 0.001]                 # Possible initial learning rate for the prediction head
 init_base_lr: [0.00005, 0.0001, 0.0002, 0.0005]            # Possible initial learning rate for the base GNN encoder
-weight_decay: 1e-6              # weight decay of Adam
+weight_decay: 0.000001              # weight decay of Adam
 gpu: cuda:0                     # training device
 task_name: BBBP                  # name of fine-tuning benchmark, inlcuding
                                 # classifications: BBBP/BACE/ClinTox/Tox21/HIV/SIDER/MUV
                                 # regressions: FreeSolv/ESOL/Lipo/qm7/qm8/qm9
-
-model_type: gin_concat                 # Pre-training strategy consisting of GNN backbone ('gin' or 'gcn') and 
-                                       # representation construction ('concat' or 'noconcat')
+model_outdir: finetune            # output directory of fine-tuned models
+experiment_outdir: experiments
 model: 
-  num_layer: 5                          # number of graph conv layers
-  emb_dim: 200                          # representation dimension in each GNN layer. 
-                                        # If representation construction is 'concat', then the representation will have
-                                        # dimension = num_layer * emb_dim
-
-  feat_dim: 8000                       # output embedding dimension used for input ot BT loss
-  pool: add                            # readout pooling (i.e., mean/max/add)
   drop_ratio: [0, 0.1, 0.3, 0.5]       # Possible dropout ratios
   pred_n_layer: [1, 2]                 # Possible number of layers on prediction head
   pred_act: ["softplus", "relu"]       # Possible activation functions on prediction head

@@ -1,20 +1,9 @@
-task_name: "clintox"             # Name of the benchmark to be predicted inlcuding
-                                 # classifications: BBBP/BACE/ClinTox/Tox21/HIV/SIDER/MUV
-                                 # regressions: FreeSolv/ESOL/Lipo/qm7/qm8/qm9
+smiles_filepath: ./data/benchmark_data/bbbp/BBBP.csv              # Complete path to the file with the SMILES of the molecules. Must be a .csv file.
+smiles_colname: smiles                                            # Name of the column in --smiles_filepath that contains SMILES of the molecules.
+chemid_colname: None                                              # Name of the column in --smiles_filepath that contains the identifier of the molecules. If None, the index of the dataframe will be used.
 
-device: "cuda:0"                  # Device to be used for training. Can be "cuda" or "cpu"
+gpu: cuda:0                                                       # Name of the cuda device to run pre-trained model. Can also be 'cpu'.
 
-model_type: "XGBClassifier"              # ML algorithm to be used for prediction. Can be one of: XGBClassifier, XGBRegressor, RFClassifier, or RFRegressor
-pretrain_architecture: "gin_concat"      # The MolE pre-training architechture. Can be: gin_concat, gin_noconcat, gcn_concat, or gcn_noconcat
-pretrained_model: "gin_concat_R1000_E8000_lambda0.0001" # The pre-trained model to be used for featurizing the data. 
-                                                        # This should be a sub-directory of ./ckpt OR
-                                                        # "MolCLR" or "ECFP4".                                                               
+representation: gin_concat_R1000_E8000_lambda0.0001               # Type of molecular representation to be gathered. Can be 'MolCLR', 'ECFP4', or one of the pre-trained models in ./ckpt (only subfolder name is necessary).
 
-dataset:
-  validation_size: 0.1               # ratio of validation data
-  test_size: 0.1                # ratio of test data
-  splitting: scaffold           # data splitting (i.e., random/scaffold)
-
-random_search:
-  n_models: 5                   # number of models to be trained
-  n_trains: 3                  # number of times to train each model
+output_filepath: representation_dir/output_representation.tsv.gz  # Complete path to the file where the molecular representation will be saved. Outputs a tsv file.

@@ -10,6 +10,8 @@ finetune.sh
 pretrain.sh
 representation.sh
 requirements.txt
+test.py
+output_metrics/**
 
 data/pubchem_data/pubchem_1M_random.txt
 data/pubchem_data/pubchem-10m-clean.txt

@@ -13,7 +13,7 @@ import yaml
 import numpy as np
 import pandas as pd
 from datetime import datetime
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -180,7 +180,7 @@ class PretrainChemRep(object):
         
         optimizer = torch.optim.Adam(
             model.parameters(), self.config['init_lr'], 
-            weight_decay=eval(self.config['weight_decay'])
+            weight_decay=self.config['weight_decay']
         )
         scheduler = CosineAnnealingLR(
             optimizer, T_max=self.config['epochs']-self.config['warm_up'], 
@@ -263,19 +263,161 @@ def get_args():
     """
     Parses command line arguments for finetuning
     """
-    parser = ArgumentParser()
-    
-    parser.add_argument("-m", "--model_type", dest="model_type",
-                        default="None", 
-                        help="model_type")
+    parser = ArgumentParser(prog="Pre-train a molecular representation using the MolE framework.",
+                            description="This program receives the hyperparamters to train a pre-trained molecular representation using the MolE framework. Hyperparameters can be given either in yaml file or as command line arguments. If a yaml file is provided, command line arguments are ignored. The program will return a model.pth file with the pre-trained weights and config.yaml file with the indicated hyperparameters.",
+                            usage="python pretrain.py -y config.yaml | python pretrain.py [options]",
+                            formatter_class=ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument("-l", "--lambda_val", dest="lambda_val", 
-                        default=-1, type=float,
-                        help="value of lambda value for BT loss")
-   
+    parser.add_argument("--config_yaml", dest="config_yaml",
+                        help="Complete path to yaml file that contains the parameters for model pre-training")
+    
+    # General arguments for trainig
+    pretargs = parser.add_argument_group("Pre-training parameters", "Parameters for model pre-training.")
+    pretargs.add_argument("--batch_size", dest="batch_size", type=int,
+                        default=1000,
+                        help="Number of compounds in each batch during pre-training.")
+    
+    pretargs.add_argument("--warm_up", dest="warm_up", type=int,
+                        default=10,
+                        help="Number of warm up epochs before cosine annealing begins.")
+    
+    pretargs.add_argument("--epochs", dest="epochs",
+                        default=1000, type=int,
+                        help="Total number of epochs to pre-train.")
+    
+    pretargs.add_argument("--eval_every_n_epochs", dest="eval_every_n_epochs",
+                        default=1, type=int,
+                        help="Validation frequency.")
+    
+    pretargs.add_argument("--save_every_n_epochs", dest="save_every_n_epochs",
+                        default=5, type=int,
+                        help="Automatically save model every n epochs.")
+    
+    pretargs.add_argument("--init_lr", 
+                        dest="init_lr",
+                        type=float,
+                        default=0.0005, 
+                        help="Inital learning rate for the ADAM optimizer.")
+    
+    pretargs.add_argument("--weight_decay", 
+                        dest="weight_decay",
+                        type=float,
+                        default=0.00001,
+                        help="Weight decay for ADAM.")
+    
+    pretargs.add_argument("--gpu", 
+                        dest="gpu",
+                        type=str,
+                        default="cuda:0",
+                        help="Name of the cuda device to run pre-training. Can also be 'cpu'.")
+    
+    pretargs.add_argument("--model_type", 
+                        dest="model_type",
+                        type=str,
+                        default="gin_concat", 
+                        choices=["gin_concat", "gin_noconcat", "gcn_concat", "gcn_noconcat"],
+                        help="Pre-training architechture consisting of GNN backbone (gin or gcn) and representation building (concat or noconcat).")
+
+    pretargs.add_argument("--load_model", 
+                        dest="load_model",
+                        default="None",
+                        type=str,
+                        help="Name of model in ckpt to resume pre-training.")
+    
+    # Model architechture
+    modelargs = parser.add_argument_group("Model parameters", "Parameters for the GNN model backbone.")
+    modelargs.add_argument("--num_layer", 
+                        dest="num_layer",
+                        type=int,
+                        default=5, 
+                        help="Number of GNN layers.")
+    
+    modelargs.add_argument("--emb_dim", 
+                        dest="emb_dim",
+                        type=int,
+                        default=200,
+                        help="Dimensionality of the graph representation. If representation building is '*_concat', then the graph representation of each GNN layer is emb_dim dimensional and the final molecular representation (r) will have dimension = num_layer * emb_dim. Else representation will be emb_dim dimensional.")
+    
+    modelargs.add_argument("--feat_dim", 
+                        dest="feat_dim",
+                        type=int,
+                        default=8000,
+                        help="Dimensionality of the embedding vector (z) that is the input to the barlow-twins loss.")
+    
+    modelargs.add_argument("--drop_ratio", 
+                        dest="drop_ratio",
+                        type=float,
+                        default=0.0, 
+                        help="Dropout ratio")
+    
+    modelargs.add_argument("--pool", 
+                        dest="pool",
+                        type=str,
+                        default="add",
+                        choices=["max", "add", "avg"],
+                        help="Readout pooling function to great graph-layer representations.")
+
+    # Dataset parameters
+    datasetargs = parser.add_argument_group("Dataset parameters", "Parameters for the dataset of unlabled molecules.")
+    datasetargs.add_argument("--num_workers", 
+                        dest="num_workers",
+                        type=int,
+                        default=100,
+                        help="Dataloader number of workers.")
+
+    datasetargs.add_argument("--valid_size", 
+                        dest="valid_size",
+                        type=float, 
+                        default=0.1,
+                        help="Ratio of the total of molecules provided that are used as validation set.")   
+    
+    datasetargs.add_argument("--data_path", 
+                        dest="data_path",
+                        type=str,
+                        default="data/pubchem_data/pubchem_100k_random.txt",
+                        help="Path to pre-training dataset of unlabeled molecules.")
+    
+    # Loss function parameters
+    datasetargs.add_argument("--lambda_val", dest="lambda_val", 
+                        default=1e-4, type=float,
+                        help="Value of lambda value for BT loss")
+
     args = parser.parse_args()
 
     return args
+
+def gather_config():
+    """
+    This function returns a config dictionary to be used during pre-training
+    """
+
+    # Parse command line arguments
+    args = get_args()
+
+    # If a config file is given, then parameters are read from there
+    if args.config_yaml != None:
+        print(f"Reading pre-training arguments from {args.config_yaml}. Ignoring command line arguments.")
+
+        with open(args.config_yaml, "r") as file:
+            config_dict = yaml.load(file, Loader=yaml.FullLoader)
+        
+        return config_dict
+    
+    # Else we have to build a dictionary with the same config structure
+    arg_dict = vars(args)
+    
+    # Build model param dictionary
+    config_subdicts = {"model": {k: arg_dict[k] for k in ["num_layer", "emb_dim", "feat_dim", "drop_ratio", "pool"]},
+                       "loss": {"l":arg_dict["lambda_val"]},
+                       "dataset": {k: arg_dict[k] for k in ["num_workers", "valid_size", "data_path"]}}
+    
+    # Update arg_dict
+    for key in ["num_layer", "emb_dim", "feat_dim", "drop_ratio", "pool", "lambda_val", "num_workers", "valid_size", "data_path"]:
+        del arg_dict[key]
+    
+    arg_dict.update(config_subdicts)
+
+    return arg_dict
 
 def main():
 
@@ -290,17 +432,7 @@ def main():
     """
 
     # Argument readings
-    given_args = get_args()
-
-    # Read config file
-    config = yaml.load(open("config.yaml", "r"), Loader=yaml.FullLoader)
-
-    # Check if we have to modify the config file
-    if given_args.model_type != "None":
-        config["model_type"] = given_args.model_type
-    
-    if given_args.lambda_val != -1:
-        config["loss"]["l"] = given_args.lambda_val
+    config = gather_config()
 
     print(config)
 
