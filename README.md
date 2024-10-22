@@ -21,7 +21,7 @@ conda activate mole
 
 Once this is done, you can clone this repository.
 
-## How to use MolE. 
+## How to use MolE 
   
 In this repository, we provide the necessary scripts to: 
  - [Pre-train](#pre-training) a molecular representation using the MolE framework.  
