@@ -3,10 +3,10 @@
 This repository contains the implementation of the MolE pre-training framework. We provide the scripts to pre-train, finetune, train ML models, and extract the static molecular representation learned after pre-training. 
 
 
-## Pre-print:
-For more details on MolE, you can check out our pre-print on bioarxiv:  
+## Publication:
+For more details on MolE, you can check out our publication in Nature Communications:  
 
-[**Pre-trained molecular representations enable antimicrobial discovery**](https://www.biorxiv.org/content/10.1101/2024.03.11.584456v2)
+[**Pre-trained molecular representations enable antimicrobial discovery**](https://www.nature.com/articles/s41467-025-58804-4)
 
 ## Installation
 To use MolE, it is convenient to create a conda environment and install the necessary dependencies. To make things easier, we provide an `environment.yaml` file, that you can use to set up the environment with all the necessary dependencies. Keep in mind, that we install [pytorch assuming a CUDA 11.8 compute platform](https://pytorch.org/).
